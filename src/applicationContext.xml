@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		                    http://www.springframework.org/schema/beans/spring-beans.xsd
+		                    http://www.springframework.org/schema/context 
+		                    http://www.springframework.org/schema/context/spring-context.xsd
+		                    http://www.springframework.org/schema/tx 
+		                    http://www.springframework.org/schema/tx/spring-tx.xsd
+		                    http://www.springframework.org/schema/aop 
+		                    http://www.springframework.org/schema/aop/spring-aop.xsd"
+	default-autowire="byName">
+
+
+	<!-- 开启annotation配置 -->
+	<context:annotation-config />
+	<!-- 扫描包内的注解 -->
+	<context:component-scan base-package="com.zero" />
+
+	<!-- 加载配置文件 -->
+	<context:property-placeholder
+		location="classpath:db.properties" file-encoding="utf-8"
+		ignore-unresolvable="true" />
+
+
+	<!-- 创建sessionFactory -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan">
+			<list>
+				<!-- 可以加多个包 -->
+				<value>com.zero.po</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<!-- <prop key="hibernate.show_sql">${hibernate.show_sql}</prop> -->
+				<!-- <prop key="hibernate.format_sql">${hibernate.format_sql}</prop> -->
+				<prop key="hibernate.temp.use_jdbc_metadata_defaults">false</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- 创建dataSorce -->
+	<bean id="dataSource"
+		class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close" p:driverClass="${jdbc.driverClassName}"
+		p:jdbcUrl="${jdbc.url}" p:user="${jdbc.username}"
+		p:password="${jdbc.password}"
+		p:testConnectionOnCheckout="${jdbc.c3p0.testConnectionOnCheckout}"
+		p:testConnectionOnCheckin="${jdbc.c3p0.testConnectionOnCheckin}"
+		p:idleConnectionTestPeriod="${jdbc.c3p0.idleConnectionTestPeriod}"
+		p:initialPoolSize="${jdbc.c3p0.initialPoolSize}"
+		p:minPoolSize="${jdbc.c3p0.minPoolSize}"
+		p:maxPoolSize="${jdbc.c3p0.maxPoolSize}"
+		p:maxIdleTime="${jdbc.c3p0.maxIdleTime}" />
+
+	<!-- 创建事务管理 -->
+	<bean id="txManager"
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<tx:annotation-driven
+		transaction-manager="txManager" />
+<!-- 多部分文件上传 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!-- 最大5G -->
+		<property name="maxUploadSize" value="5368709120" />
+		<property name="maxInMemorySize" value="4096" />
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+
+</beans>
